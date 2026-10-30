@@ -45,7 +45,7 @@ p{margin:0}
   <section class="card">
     <div class="label" id="count"></div>
     <p class="q" id="q"></p>
-    <div class="row"><button class="btn main" id="rev">Reveal answer</button><button class="btn" id="prev">Back</button><button class="btn" id="next">Next</button></div>
+    <div class="row"><button class="btn main" id="rev">Reveal answer</button><button class="btn" id="prev">Back</button><button class="btn" id="next">Next</button><button class="btn" id="mix">Shuffle</button></div>
     <div class="ans" id="ans" hidden></div>
   </section>
   <section class="card">
@@ -78,10 +78,12 @@ var QS=[
  {s:'Chris was laid off, spent two months learning new skills, and landed a better job.',term:'Resilience',why:'Bouncing back from a setback. The chapter says resilience can be developed.'}
 ];
 var i=0;
+function shuffled(a){var r=a.slice();for(var k=r.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=r[k];r[k]=r[j];r[j]=t}return r}
+var ORDER=TERMS.slice();
 var $=function(id){return document.getElementById(id)};
 var solved=false, missed={};
 function bank(hit){
-  $('bank').innerHTML=TERMS.map(function(x){
+  $('bank').innerHTML=ORDER.map(function(x){
     var cls=hit===x.t?'hit':(missed[x.t]?'miss':'');
     return '<button type="button" data-t="'+x.t+'" class="'+cls+'"'+(solved?' disabled':'')+'><b>'+x.t+(missed[x.t]?' \u2717':'')+(hit===x.t?' \u2713':'')+'</b><span>'+x.d+'</span></button>';
   }).join('');
@@ -103,7 +105,9 @@ function show(){
 $('rev').onclick=reveal;
 $('next').onclick=function(){i=Math.min(QS.length-1,i+1);show()};
 $('prev').onclick=function(){i=Math.max(0,i-1);show()};
-show();
+function mix(){QS=shuffled(QS);ORDER=shuffled(TERMS);i=0;show()}
+$('mix').onclick=mix;
+mix();
 })();
 </script>
 </body>
