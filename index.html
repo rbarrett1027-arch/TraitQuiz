@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Trait Quiz</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+html{color-scheme:light}body{margin:0}
+/* Layout: built to be projected. Big question, word bank always visible, reveal button, pod scoreboard under it. Gold is the only accent. */
+:root{--bg:#f6f7f9;--card:#fff;--fg:#1b2230;--muted:#5a6475;--line:#d9dde5;--accent:#f2b300;--accent-fg:#1b2230;--good:#1f7a4d;
+ --display:'Bricolage Grotesque','Trebuchet MS',sans-serif;--body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#12161f;--card:#1b2130;--fg:#eef1f6;--muted:#a2acbe;--line:#2d3649;--good:#58c58f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#12161f;--card:#1b2130;--fg:#eef1f6;--muted:#a2acbe;--line:#2d3649;--good:#58c58f;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:18px/1.5 var(--body);padding-block:20px 48px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1{font:700 clamp(28px,5vw,38px)/1.1 var(--display);margin:0}
+p{margin:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:14px}
+.label{font:600 13px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.q{font:600 clamp(22px,4vw,32px)/1.3 var(--display);text-wrap:balance}
+.bank{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px}
+.bank button{text-align:left;font:inherit;color:var(--fg);background:var(--card);border:1.5px solid var(--line);border-radius:8px;padding:8px 12px;font-size:15px;cursor:pointer}
+.bank button:hover{border-color:var(--fg)}
+.bank button:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+.bank .miss{border-color:#c0392b;background:var(--card)}
+.bank button:disabled{cursor:default;opacity:1}
+.bank b{display:block;font-size:16px;color:var(--fg)}
+.bank span{color:var(--muted);font-size:14px}
+.bank .hit{border:2px solid var(--good)}
+.btn{font:600 17px var(--body);border:1.5px solid var(--fg);background:transparent;color:var(--fg);padding:10px 18px;border-radius:8px;cursor:pointer}
+.btn.main{background:var(--accent);border-color:var(--accent);color:var(--accent-fg)}
+.btn:focus-visible{outline:3px solid #2a5bd7;outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.ans{border-left:4px solid var(--accent);padding:2px 0 2px 14px}
+.ans b{font:700 26px var(--display)}
+.small{font-size:14px;color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <h1>Trait Quiz</h1>
+  <section class="card">
+    <div class="label" id="count"></div>
+    <p class="q" id="q"></p>
+    <div class="row"><button class="btn main" id="rev">Reveal answer</button><button class="btn" id="prev">Back</button><button class="btn" id="next">Next</button></div>
+    <div class="ans" id="ans" hidden></div>
+  </section>
+  <section class="card">
+    <div class="label">Word bank (click your answer)</div>
+    <div class="bank" id="bank"></div>
+  </section>
+  <p class="small">Nothing is saved or sent.</p>
+</main>
+<script>
+(function(){
+/* To change a question, edit this list. term must match one entry in TERMS. */
+var TERMS=[
+ {t:'Locus of control',d:'Whether you believe you control your fate (internal) or luck and outside forces do (external).'},
+ {t:'Machiavellianism',d:'Pragmatic, emotionally distant, believes the ends justify the means.'},
+ {t:'Self-esteem',d:'How much you like or dislike yourself.'},
+ {t:'Self-monitoring',d:'How much you adjust your behavior to fit the situation.'},
+ {t:'Risk-taking',d:'Willingness to take chances.'},
+ {t:'Type A',d:'Always racing the clock; impatient and hurried. (Type B is relaxed.)'},
+ {t:'Proactive personality',d:'Takes initiative and keeps going until real change happens.'},
+ {t:'Resilience',d:'Bouncing back from setbacks. It can be developed.'}
+];
+var QS=[
+ {s:'Maya got her promotion and says, “It happened because of the choices I made and the effort I put in.”',term:'Locus of control',why:'Maya believes she controls her own fate. That is an internal locus of control.'},
+ {s:'Jordan will say whatever works to get ahead, keeps an emotional distance from coworkers, and says, “Results are all that matter.”',term:'Machiavellianism',why:'Pragmatic, emotionally distant, and believes the ends justify the means.'},
+ {s:'Priya likes herself, is confident she can handle tough assignments, and volunteers for them.',term:'Self-esteem',why:'Self-esteem is how much you like yourself, and it shows up in the confidence to take on challenges.'},
+ {s:'Sam is formal with the boss, joking with friends, and quiet in a client meeting. Sam reads the room and adjusts every time.',term:'Self-monitoring',why:'High self-monitors adjust their behavior to fit the situation.'},
+ {s:'Lee left a steady job for a startup with no guaranteed paycheck because the upside looked big.',term:'Risk-taking',why:'Willingness to take chances.'},
+ {s:'Alex checks the clock constantly, hates waiting, and finishes other people’s sentences to hurry them along.',term:'Type A',why:'Always racing the clock. Type B people are relaxed and not harried.'},
+ {s:'Noor noticed a broken process, fixed it without being asked, and kept pushing until the whole team adopted the change.',term:'Proactive personality',why:'Takes initiative and persists until change happens.'},
+ {s:'Chris was laid off, spent two months learning new skills, and landed a better job.',term:'Resilience',why:'Bouncing back from a setback. The chapter says resilience can be developed.'}
+];
+var i=0;
+var $=function(id){return document.getElementById(id)};
+var solved=false, missed={};
+function bank(hit){
+  $('bank').innerHTML=TERMS.map(function(x){
+    var cls=hit===x.t?'hit':(missed[x.t]?'miss':'');
+    return '<button type="button" data-t="'+x.t+'" class="'+cls+'"'+(solved?' disabled':'')+'><b>'+x.t+(missed[x.t]?' \u2717':'')+(hit===x.t?' \u2713':'')+'</b><span>'+x.d+'</span></button>';
+  }).join('');
+}
+function reveal(){
+  var q=QS[i];solved=true;$('ans').hidden=false;$('ans').innerHTML='<b>'+q.term+'</b><p>'+q.why+'</p>';$('rev').hidden=true;bank(q.term);
+}
+$('bank').onclick=function(e){
+  var btn=e.target.closest&&e.target.closest('button[data-t]');if(!btn||solved)return;
+  var t=btn.getAttribute('data-t');
+  if(t===QS[i].term){reveal()}else{missed[t]=true;$('ans').hidden=false;$('ans').innerHTML='<p>Not quite. Try another term.</p>';bank(null)}
+};
+function show(){
+  var q=QS[i];
+  $('count').textContent='Question '+(i+1)+' of '+QS.length;
+  $('q').textContent=q.s;
+  solved=false;missed={};$('ans').hidden=true;$('rev').hidden=false;bank(null);
+}
+$('rev').onclick=reveal;
+$('next').onclick=function(){i=Math.min(QS.length-1,i+1);show()};
+$('prev').onclick=function(){i=Math.max(0,i-1);show()};
+show();
+})();
+</script>
+</body>
+</html>
